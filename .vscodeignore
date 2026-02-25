@@ -1,10 +1,8 @@
 .vscode/**
 .vscode-test/**
-out/**
 node_modules/**
-src/**
+src/**/*.ts
 .gitignore
 .yarnrc
 tsconfig.json
 **/*.map
-**/*.ts
