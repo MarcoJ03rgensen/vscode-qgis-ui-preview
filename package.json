@@ -3,6 +3,11 @@
   "displayName": "QGIS / Qt UI Preview",
   "description": "Preview PyQt .ui files for QGIS plugin development directly in VS Code",
   "version": "0.0.1",
+  "publisher": "MarcoJ03rgensen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MarcoJ03rgensen/vscode-qgis-ui-preview.git"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
