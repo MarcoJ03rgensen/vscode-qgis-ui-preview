@@ -46,14 +46,24 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
 }
 
+function getPythonPath(): string {
+    const config = vscode.workspace.getConfiguration('python');
+    let pythonPath = config.get<string>('defaultInterpreterPath');
+    if (!pythonPath || pythonPath === 'python') {
+        pythonPath = config.get<string>('pythonPath') || 'python';
+    }
+    return pythonPath;
+}
+
 function renderUiToWebview(filePath: string, panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
     panel.webview.html = getLoadingContent();
 
     const pythonScript = context.asAbsolutePath(path.join('src', 'render_ui.py'));
+    const pythonExecutable = getPythonPath();
     
-    cp.exec(\`python "\${pythonScript}" "\${filePath}"\`, { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
+    cp.exec(\`"\${pythonExecutable}" "\${pythonScript}" "\${filePath}"\`, { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
         if (err) {
-            panel.webview.html = getErrorContent(stderr || err.message);
+            panel.webview.html = getErrorContent(stderr || err.message, pythonExecutable);
             return;
         }
 
@@ -77,7 +87,7 @@ function getLoadingContent() {
     </html>\`;
 }
 
-function getErrorContent(error: string) {
+function getErrorContent(error: string, pythonPath: string) {
     return \`<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -89,7 +99,8 @@ function getErrorContent(error: string) {
     </head>
     <body>
         <h2>Failed to render UI</h2>
-        <p>Ensure that 'python' is in your PATH and PyQt5/PyQt6 is installed.</p>
+        <p>Ensure that PyQt5/PyQt6 is installed in the selected Python environment.</p>
+        <p><strong>Python Interpreter used:</strong> \${pythonPath}</p>
         <pre>\${error}</pre>
     </body>
     </html>\`;
