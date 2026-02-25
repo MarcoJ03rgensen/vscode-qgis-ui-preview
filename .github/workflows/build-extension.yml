@@ -1,0 +1,67 @@
+name: Build and Package VS Code Extension
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Compile TypeScript
+      run: npm run compile
+
+    - name: Package Extension (VSIX)
+      run: |
+        npm install -g @vscode/vsce
+        vsce package
+
+    - name: Upload VSIX Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: vscode-qgis-ui-preview
+        path: '*.vsix'
+
+  release:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Package Extension (VSIX)
+      run: |
+        npm install -g @vscode/vsce
+        vsce package
+
+    - name: Publish to VS Code Marketplace
+      # Requires a VS Code Personal Access Token stored in GitHub Secrets as VSCE_PAT
+      run: vsce publish -p ${{ secrets.VSCE_PAT }}
