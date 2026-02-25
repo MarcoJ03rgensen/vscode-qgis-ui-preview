@@ -3,7 +3,8 @@ import * as cp from 'child_process';
 import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('QGIS UI Preview extension is now active!');
+    let previewPanel: vscode.WebviewPanel | undefined;
+    let currentPreviewFilePath: string | undefined;
 
     let disposable = vscode.commands.registerCommand('qgis-ui.preview', (uri: vscode.Uri) => {
         let filePath = uri ? uri.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath;
@@ -13,30 +14,52 @@ export function activate(context: vscode.ExtensionContext) {
             return;
         }
 
-        const panel = vscode.window.createWebviewPanel(
+        currentPreviewFilePath = filePath;
+
+        if (previewPanel) {
+            previewPanel.reveal(vscode.ViewColumn.Beside);
+            renderUiToWebview(filePath, previewPanel, context);
+            return;
+        }
+
+        previewPanel = vscode.window.createWebviewPanel(
             'qtUiPreview',
             'Qt UI Preview: ' + path.basename(filePath),
             vscode.ViewColumn.Beside,
             { enableScripts: true }
         );
 
-        panel.webview.html = getLoadingContent();
-
-        const pythonScript = context.asAbsolutePath(path.join('src', 'render_ui.py'));
-        
-        // Ensure python runs correctly. Uses system python environment where PyQt5/PyQt6 is installed.
-        cp.exec(\`python "\${pythonScript}" "\${filePath}"\`, { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
-            if (err) {
-                panel.webview.html = getErrorContent(stderr || err.message);
-                return;
-            }
-
-            const base64Image = stdout.trim();
-            panel.webview.html = getPreviewContent(base64Image);
+        previewPanel.onDidDispose(() => {
+            previewPanel = undefined;
+            currentPreviewFilePath = undefined;
         });
+
+        renderUiToWebview(filePath, previewPanel, context);
+    });
+
+    vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
+        if (previewPanel && currentPreviewFilePath === document.uri.fsPath) {
+            renderUiToWebview(currentPreviewFilePath, previewPanel, context);
+        }
     });
 
     context.subscriptions.push(disposable);
+}
+
+function renderUiToWebview(filePath: string, panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
+    panel.webview.html = getLoadingContent();
+
+    const pythonScript = context.asAbsolutePath(path.join('src', 'render_ui.py'));
+    
+    cp.exec(\`python "\${pythonScript}" "\${filePath}"\`, { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
+        if (err) {
+            panel.webview.html = getErrorContent(stderr || err.message);
+            return;
+        }
+
+        const base64Image = stdout.trim();
+        panel.webview.html = getPreviewContent(base64Image);
+    });
 }
 
 function getLoadingContent() {
