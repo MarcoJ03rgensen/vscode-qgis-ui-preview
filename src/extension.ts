@@ -9,8 +9,8 @@ export function activate(context: vscode.ExtensionContext) {
     let disposable = vscode.commands.registerCommand('qgis-ui.preview', (uri: vscode.Uri) => {
         let filePath = uri ? uri.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath;
 
-        if (!filePath || !filePath.endsWith('.ui')) {
-            vscode.window.showErrorMessage('Please select a valid Qt .ui file to preview.');
+        if (!filePath || (!filePath.endsWith('.ui') && !filePath.endsWith('.py'))) {
+            vscode.window.showErrorMessage('Please select a valid Qt .ui or .py file to preview.');
             return;
         }
 
