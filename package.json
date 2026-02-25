@@ -2,7 +2,7 @@
   "name": "vscode-qgis-ui-preview",
   "displayName": "QGIS / Qt UI Preview",
   "description": "Preview PyQt .ui files for QGIS plugin development directly in VS Code",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "MarcoJ03rgensen",
   "repository": {
     "type": "git",
@@ -20,21 +20,29 @@
     "commands": [
       {
         "command": "qgis-ui.preview",
-        "title": "Preview Qt UI"
+        "title": "Preview QGIS UI",
+        "icon": "$(open-preview)"
       }
     ],
     "menus": {
       "editor/title": [
         {
           "command": "qgis-ui.preview",
-          "when": "resourceExtname == .ui",
+          "when": "resourceExtname == '.ui'",
           "group": "navigation"
         }
       ],
       "explorer/context": [
         {
           "command": "qgis-ui.preview",
-          "when": "resourceExtname == .ui",
+          "when": "resourceExtname == '.ui'",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "qgis-ui.preview",
+          "when": "resourceExtname == '.ui'",
           "group": "navigation"
         }
       ]
